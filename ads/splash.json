@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "version": "2026.10.07.1",
+  "version": "2026.10.07.2",
   "duration_seconds": 4,
   "show_interval_minutes": 0,
   "strategy": "priority",
@@ -18,7 +18,7 @@
       "enabled": true,
       "priority": 100,
       "weight": 10,
-      "version": "2026.10.07.1",
+      "version": "2026.10.07.2",
       "duration_seconds": 4,
       "image": "ads/images/splash_default.png",
       "images": {
@@ -31,7 +31,7 @@
       "links": {
         "pt-BR": "https://ararabr.com/",
         "es": "https://ararabr.com/",
-        "en": "https://ararabr.com/en",
+        "en": "https://ararabr.com/",
         "zh": "https://ararabr.com/"
       },
       "cta_texts": {
