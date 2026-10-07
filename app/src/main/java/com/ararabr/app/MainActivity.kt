@@ -42,6 +42,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.firebase.analytics.FirebaseAnalytics
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_PT_COOKIE_INIT_V2 = "pt_cookie_init_v2"
     }
 
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     private lateinit var rootContainer: View
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
@@ -107,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         applyHyperOsFullScreen()
         setContentView(R.layout.activity_main)
 
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         rootContainer = findViewById(R.id.rootContainer)
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.progressBar)
@@ -401,11 +404,21 @@ class MainActivity : AppCompatActivity() {
         val imageView = findViewById<ImageView>(R.id.splashImage)
         imageView.setImageBitmap(ad.bitmap)
 
+        firebaseAnalytics.logEvent("splash_ad_impression", Bundle().apply {
+            putString("ad_id", ad.id)
+            putString("ad_version", ad.version)
+            putString("locale", systemLocaleTag)
+        })
+
         splashBadge.text = localizedUiContext.getString(R.string.splash_ad_badge)
         splashCta.text = ad.ctaText?.takeIf { it.isNotBlank() }
             ?: localizedUiContext.getString(R.string.splash_cta_default)
 
         val onAdClick = View.OnClickListener {
+            firebaseAnalytics.logEvent("splash_ad_click", Bundle().apply {
+                putString("ad_id", ad.id)
+                putString("link", ad.link)
+            })
             dismissSplashOverlay()
             handleAdClick(ad.link, ad.openExternal)
         }
@@ -413,6 +426,9 @@ class MainActivity : AppCompatActivity() {
         splashCta.setOnClickListener(onAdClick)
 
         splashSkip.setOnClickListener {
+            firebaseAnalytics.logEvent("splash_ad_skip", Bundle().apply {
+                putString("ad_id", ad.id)
+            })
             dismissSplashOverlay()
         }
 
