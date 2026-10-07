@@ -3,18 +3,10 @@
     <string name="app_name">Arara</string>
     <string name="splash_brand_tagline">ararabr.com • 巴西官方商城</string>
     <string name="splash_ad_badge">广告</string>
-    <string name="splash_skip">跳过 %1$ds</string>
-    <string name="splash_cta_default">立即查看 →</string>
-
-    <string name="lang_button_label">🌐 中文</string>
-    <string name="lang_dialog_title">选择语言 / Idioma</string>
-    <string name="lang_opt_pt_br">🇧🇷 Português (Brasil) - 默认葡语主页</string>
-    <string name="lang_opt_es">🇪🇸 Español (西班牙语)</string>
-    <string name="lang_opt_en">🇺🇸 English (英语)</string>
-    <string name="lang_opt_zh">🇨🇳 中文 (简体)</string>
-    <string name="lang_opt_home">🏠 返回葡语巴西主页 (ararabr.com)</string>
-    <string name="lang_opt_refresh_ad">🔄 立即同步 GitHub 开屏广告</string>
-    <string name="ad_refreshed_toast">已从 GitHub 同步最新开屏广告！</string>
+    <string name="splash_enter">进入主页 →</string>
+    <string name="splash_share">📤 分享应用</string>
+    <string name="share_apk_chooser_title">分享最新 APK 下载链接</string>
+    <string name="share_apk_message">下载 Arara (ararabr.com) 安卓官方应用最新 APK：\n%1$s</string>
 
     <string name="error_title">网络连接不可用</string>
     <string name="error_message">无法加载 ararabr.com，请检查您的网络连接后重试。</string>

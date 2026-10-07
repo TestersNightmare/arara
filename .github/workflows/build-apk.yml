@@ -1,4 +1,4 @@
-name: Build Arara APK
+name: Build & Release Arara APK
 
 on:
   push:
@@ -26,40 +26,42 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Decode signing keystore (optional)
+      - name: Prepare signing keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
-            echo "Keystore decoded."
+            echo "Decoded release.keystore from secret."
           else
-            echo "::notice::KEYSTORE_BASE64 not set — building debug & unsigned release APKs."
+            keytool -genkeypair -v -keystore release.keystore -alias arara -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "arara2026" -keypass "arara2026" -dname "CN=Arara, O=AraraBr, C=BR"
+            echo "Generated default release.keystore so APK is installable."
           fi
 
-      - name: Build Debug & Release APKs
+      - name: Build Signed Release & Debug APKs
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: gradle assembleDebug assembleRelease --no-daemon
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'arara2026' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'arara' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'arara2026' }}
+        run: |
+          gradle assembleDebug assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release*.apk arara.apk
 
-      - name: Upload Debug APK Artifact
+      - name: Upload arara.apk Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arara-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: arara-apk
+          path: arara.apk
 
-      - name: Upload Release APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: arara-release-apk
-          path: app/build/outputs/apk/release/*.apk
-
-      - name: Create GitHub Release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish Latest GitHub Release (arara.apk)
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.0.0' }}
+          name: "Arara Android App (Latest APK)"
+          body: |
+            Direct APK Download Link:
+            https://github.com/TestersNightmare/arara/releases/latest/download/arara.apk
+          prerelease: false
+          make_latest: true
+          files: arara.apk

@@ -10,13 +10,20 @@ object AppConfig {
     const val HOME_URL = "https://ararabr.com"
 
     /**
+     * Direct download URL for the latest release APK on GitHub Releases.
+     */
+    const val LATEST_APK_DOWNLOAD_URL =
+        "https://github.com/TestersNightmare/arara/releases/latest/download/arara.apk"
+
+    /**
+     * GitHub API endpoint to query the latest release APK asset dynamically.
+     */
+    const val GITHUB_LATEST_RELEASE_API =
+        "https://api.github.com/repos/TestersNightmare/arara/releases/latest"
+
+    /**
      * GitHub repository for splash ad configuration and image assets:
      * https://github.com/TestersNightmare/arara.git
-     *
-     * Multi-CDN fallback base URLs (ordered by priority):
-     * 1. GitHub Raw (Direct real-time source)
-     * 2. jsDelivr Global CDN (Fast edge caching in Brazil, Americas, Europe, Asia)
-     * 3. Fastly jsDelivr Mirror (Backup edge network)
      */
     val GITHUB_ASSET_BASES = listOf(
         "https://raw.githubusercontent.com/TestersNightmare/arara/main",
@@ -33,13 +40,4 @@ object AppConfig {
      * Maximum wait time (in ms) on first cold start when local cache is empty.
      */
     const val FIRST_LAUNCH_FETCH_TIMEOUT_MS = 2500L
-
-    /**
-     * Supported application languages:
-     * - pt-BR: Português (Brasil) [Default]
-     * - es:    Español
-     * - en:    English
-     * - zh-CN: 中文 (简体)
-     */
-    val SUPPORTED_LOCALES = listOf("pt-BR", "es", "en", "zh-CN")
 }

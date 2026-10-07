@@ -64,8 +64,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var splashBrandView: View
     private lateinit var splashAdContainer: View
     private lateinit var splashBadge: TextView
-    private lateinit var splashSkip: TextView
-    private lateinit var splashCta: TextView
+    private lateinit var btnSplashShare: TextView
+    private lateinit var btnSplashEnter: TextView
 
     /** Device's real system language tag (`pt-BR`, `es`, `en`, `zh-CN`) for native UI & splash ads */
     private lateinit var systemLocaleTag: String
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bgExecutor = Executors.newSingleThreadExecutor()
-    private var countdownRunnable: Runnable? = null
+    private var hasEnteredWebsite = false
 
     private var pendingPermissionRequest: PermissionRequest? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
@@ -119,8 +119,8 @@ class MainActivity : AppCompatActivity() {
         splashBrandView = findViewById(R.id.splashBrandView)
         splashAdContainer = findViewById(R.id.splashAdContainer)
         splashBadge = findViewById(R.id.splashBadge)
-        splashSkip = findViewById(R.id.splashSkip)
-        splashCta = findViewById(R.id.splashCta)
+        btnSplashShare = findViewById(R.id.btnSplashShare)
+        btnSplashEnter = findViewById(R.id.btnSplashEnter)
 
         setupWindowInsets()
         setupWebView()
@@ -133,10 +133,11 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             prepareShopifyPtBrSession()
-            loadPtBrUrl(AppConfig.HOME_URL)
-            // Automatically sync and display splash ad on app launch
+            // Show splash page first; website homepage is opened when user clicks the Enter button
             startSplashAdFlow()
         } else {
+            hasEnteredWebsite = true
+            splashOverlay.visibility = View.GONE
             webView.restoreState(savedInstanceState)
         }
     }
@@ -182,7 +183,6 @@ class MainActivity : AppCompatActivity() {
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        // Also set legacy systemUiVisibility flags which HyperOS window manager still inspects
         window.decorView.systemUiVisibility = (
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -212,7 +212,6 @@ class MainActivity : AppCompatActivity() {
             val leftSafe = maxOf(cutout.left, if (navVis) navBars.left else 0)
             val rightSafe = maxOf(cutout.right, if (navVis) navBars.right else 0)
 
-            // Pad WebView container and error overlay so top/bottom webpage buttons are never covered
             swipeRefresh.setPadding(leftSafe, topSafe, rightSafe, bottomSafe)
             errorOverlay.setPadding(
                 leftSafe + (24 * density).toInt(),
@@ -221,26 +220,24 @@ class MainActivity : AppCompatActivity() {
                 bottomSafe + (24 * density).toInt()
             )
 
-            // Keep progress bar just below the top cutout/safe area
             (progressBar.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
                 lp.topMargin = topSafe
                 progressBar.layoutParams = lp
             }
 
-            // Offset splash ad controls away from camera cutout & bottom edge while keeping image full-bleed
             (splashBadge.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
                 lp.topMargin = topSafe + (16 * density).toInt()
                 lp.marginStart = leftSafe + (16 * density).toInt()
                 splashBadge.layoutParams = lp
             }
-            (splashSkip.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
+            (btnSplashShare.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
                 lp.topMargin = topSafe + (14 * density).toInt()
                 lp.marginEnd = rightSafe + (16 * density).toInt()
-                splashSkip.layoutParams = lp
+                btnSplashShare.layoutParams = lp
             }
-            (splashCta.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
-                lp.bottomMargin = bottomSafe + (40 * density).toInt()
-                splashCta.layoutParams = lp
+            (btnSplashEnter.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
+                lp.bottomMargin = bottomSafe + (44 * density).toInt()
+                btnSplashEnter.layoutParams = lp
             }
 
             insets
@@ -273,7 +270,6 @@ class MainActivity : AppCompatActivity() {
         cm.setAcceptCookie(true)
 
         if (!prefs.getBoolean(KEY_PT_COOKIE_INIT_V2, false)) {
-            // Clear any previously cached /en session cookie (_shopify_essential) from earlier installs
             cm.removeAllCookies(null)
             prefs.edit().putBoolean(KEY_PT_COOKIE_INIT_V2, true).apply()
         }
@@ -313,12 +309,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Automatic Splash Screen Ad Flow (syncs from GitHub on startup):
-     * 1. If a cached GitHub splash ad exists on disk, display it immediately (0ms delay),
-     *    and refresh from GitHub in the background for next startup.
-     * 2. If no cached ad exists yet (first install), show the branded Arara launch screen
-     *    briefly (up to 2.5s) while fetching `ads/splash.json` + image from GitHub,
-     *    or fallback to built-in default splash poster if offline.
+     * Automatic Splash Screen Ad Flow (syncs from GitHub on startup).
+     * Waits for user to click the "Enter" button before entering and opening the website homepage.
      */
     private fun startSplashAdFlow() {
         val cachedAd = SplashPromo.resolveCachedAd(this, systemLocaleTag)
@@ -343,7 +335,7 @@ class MainActivity : AppCompatActivity() {
                 if (fallbackAd != null) {
                     renderSplashAd(fallbackAd)
                 } else {
-                    dismissSplashOverlay()
+                    enterWebsite(AppConfig.HOME_URL, openExternal = false)
                 }
             }
         }
@@ -367,7 +359,7 @@ class MainActivity : AppCompatActivity() {
                         if (fallbackAd != null) {
                             renderSplashAd(fallbackAd)
                         } else {
-                            dismissSplashOverlay()
+                            enterWebsite(AppConfig.HOME_URL, openExternal = false)
                         }
                     }
                 }
@@ -411,68 +403,76 @@ class MainActivity : AppCompatActivity() {
         })
 
         splashBadge.text = localizedUiContext.getString(R.string.splash_ad_badge)
-        splashCta.text = ad.ctaText?.takeIf { it.isNotBlank() }
-            ?: localizedUiContext.getString(R.string.splash_cta_default)
+        btnSplashShare.text = localizedUiContext.getString(R.string.splash_share)
+        btnSplashEnter.text = ad.ctaText?.takeIf { it.isNotBlank() }
+            ?: localizedUiContext.getString(R.string.splash_enter)
 
-        val onAdClick = View.OnClickListener {
-            firebaseAnalytics.logEvent("splash_ad_click", Bundle().apply {
+        // 1. Enter button: click to enter and open the website homepage (or configured promo link)
+        val onEnterClick = View.OnClickListener {
+            firebaseAnalytics.logEvent("splash_ad_enter", Bundle().apply {
                 putString("ad_id", ad.id)
                 putString("link", ad.link)
             })
-            dismissSplashOverlay()
-            handleAdClick(ad.link, ad.openExternal)
+            enterWebsite(ad.link, ad.openExternal)
         }
-        imageView.setOnClickListener(onAdClick)
-        splashCta.setOnClickListener(onAdClick)
+        btnSplashEnter.setOnClickListener(onEnterClick)
+        imageView.setOnClickListener(onEnterClick)
 
-        splashSkip.setOnClickListener {
-            firebaseAnalytics.logEvent("splash_ad_skip", Bundle().apply {
-                putString("ad_id", ad.id)
-            })
-            dismissSplashOverlay()
+        // 2. Share button: click to share the latest GitHub Release APK download link to other Android phones
+        btnSplashShare.setOnClickListener {
+            shareLatestApkDownloadLink(ad.id)
         }
-
-        countdownRunnable?.let { mainHandler.removeCallbacks(it) }
-        var remaining = ad.durationSec
-        val tick = object : Runnable {
-            override fun run() {
-                if (remaining <= 0) {
-                    dismissSplashOverlay()
-                } else {
-                    splashSkip.text = localizedUiContext.getString(R.string.splash_skip, remaining)
-                    remaining--
-                    mainHandler.postDelayed(this, 1000L)
-                }
-            }
-        }
-        countdownRunnable = tick
-        mainHandler.post(tick)
     }
 
-    private fun dismissSplashOverlay() {
-        countdownRunnable?.let { mainHandler.removeCallbacks(it) }
-        countdownRunnable = null
+    /**
+     * Shares the latest GitHub Release APK download URL via Android system Share Sheet.
+     */
+    private fun shareLatestApkDownloadLink(adId: String) {
+        val apkUrl = SplashPromo.latestApkDownloadUrl(this)
+        firebaseAnalytics.logEvent("splash_apk_share", Bundle().apply {
+            putString("ad_id", adId)
+            putString("apk_url", apkUrl)
+        })
+
+        val shareText = localizedUiContext.getString(R.string.share_apk_message, apkUrl)
+        val chooserTitle = localizedUiContext.getString(R.string.share_apk_chooser_title)
+
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        try {
+            startActivity(Intent.createChooser(sendIntent, chooserTitle))
+        } catch (_: Exception) {
+        }
+    }
+
+    /**
+     * Dismisses the splash page and opens the website homepage (`https://ararabr.com`) in WebView.
+     */
+    private fun enterWebsite(link: String, openExternal: Boolean) {
         splashOverlay.visibility = View.GONE
-    }
-
-    private fun handleAdClick(link: String, openExternal: Boolean) {
         val trimmed = link.trim()
-        if (trimmed.isEmpty() || trimmed == "/") {
-            return
-        }
-        val targetUrl = if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        val targetUrl = if (trimmed.isEmpty() || trimmed == "/") {
+            AppConfig.HOME_URL
+        } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             trimmed
         } else {
             "${AppConfig.HOME_URL.trimEnd('/')}/${trimmed.trimStart('/')}"
         }
-        if (openExternal) {
+
+        if (!hasEnteredWebsite) {
+            hasEnteredWebsite = true
+            loadPtBrUrl( if (openExternal) AppConfig.HOME_URL else targetUrl )
+        }
+
+        if (openExternal && targetUrl != AppConfig.HOME_URL) {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)))
-                return
             } catch (_: Exception) {
             }
         }
-        loadPtBrUrl(targetUrl)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -505,7 +505,6 @@ class MainActivity : AppCompatActivity() {
                     val rawUrl = url.toString()
                     val ptUrl = rewriteShopifyUrlToPtBr(rawUrl)
                     if (ptUrl != rawUrl) {
-                        // Intercept Shopify's /en redirect and force pt-BR root path
                         loadPtBrUrl(ptUrl)
                         return true
                     }
@@ -530,7 +529,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView, url: String) {
                 swipeRefresh.isRefreshing = false
-                // Ensure that if Shopify rendered an /en locale page, it switches to pt-BR
                 val ptUrl = rewriteShopifyUrlToPtBr(url)
                 if (ptUrl != url) {
                     loadPtBrUrl(ptUrl)
@@ -620,7 +618,9 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (splashOverlay.visibility == View.VISIBLE) {
-                    dismissSplashOverlay()
+                    // While on splash screen, back button exits the app
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
                 } else if (webView.canGoBack()) {
                     webView.goBack()
                 } else {
@@ -642,7 +642,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        countdownRunnable?.let { mainHandler.removeCallbacks(it) }
         bgExecutor.shutdownNow()
         super.onDestroy()
     }

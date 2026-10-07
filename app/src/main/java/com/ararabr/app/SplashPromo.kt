@@ -16,16 +16,6 @@ import kotlin.random.Random
 
 /**
  * GitHub-driven Splash Screen Image Ad Engine (`https://github.com/TestersNightmare/arara.git`).
- *
- * Features:
- * 1. Multi-endpoint failover (GitHub Raw -> jsDelivr CDN -> Fastly Mirror).
- * 2. Supports both Simple Single-Ad JSON and Advanced Multi-Campaign JSON (`campaigns` array).
- * 3. Supports relative repo paths (e.g. `"ads/images/splash_default.png"`) and full URLs (`https://...`).
- * 4. Supports localized images, links, and CTA button text for `pt-BR`, `es`, `en`, `zh`.
- * 5. Supports campaign scheduling (`start_time` / `end_time` in ISO-8601), priority/weight rotation,
- *    and frequency capping (`show_interval_minutes`).
- * 6. Instant 0ms display from disk cache on cold start + background sync for subsequent starts,
- *    with smart fast-fetch fallback on first launch.
  */
 object SplashPromo {
 
@@ -34,6 +24,7 @@ object SplashPromo {
     private const val KEY_RAW_JSON = "raw_config_json"
     private const val KEY_LAST_SHOWN_MS = "last_shown_ms"
     private const val KEY_ROUND_ROBIN_IDX = "round_robin_idx"
+    private const val KEY_LATEST_APK_URL = "latest_apk_download_url"
 
     data class AdDisplayItem(
         val id: String,
@@ -45,6 +36,33 @@ object SplashPromo {
         val openExternal: Boolean,
         val bitmap: Bitmap
     )
+
+    /**
+     * Returns the latest release APK download URL to share with other Android phones.
+     * Priority:
+     * 1. `apk_download_url` in `ads/splash.json` (if non-empty)
+     * 2. Dynamically resolved `.apk` asset URL from GitHub Releases API (`/releases/latest`)
+     * 3. Default permanent GitHub latest release download URL (`.../releases/latest/download/arara.apk`)
+     */
+    fun latestApkDownloadUrl(ctx: Context): String {
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val rawJson = prefs.getString(KEY_RAW_JSON, null)
+        if (!rawJson.isNullOrBlank()) {
+            try {
+                val root = JSONObject(rawJson)
+                val customUrl = root.optString("apk_download_url", "").trim()
+                if (customUrl.startsWith("http://") || customUrl.startsWith("https://")) {
+                    return customUrl
+                }
+            } catch (_: Exception) {
+            }
+        }
+        val cachedReleaseUrl = prefs.getString(KEY_LATEST_APK_URL, null)
+        if (!cachedReleaseUrl.isNullOrBlank()) {
+            return cachedReleaseUrl
+        }
+        return AppConfig.LATEST_APK_DOWNLOAD_URL
+    }
 
     /**
      * Resolves an active ad campaign from cached configuration & local image cache for the given locale.
@@ -95,11 +113,14 @@ object SplashPromo {
     }
 
     /**
-     * Fetches the latest `ads/splash.json` from GitHub (with multi-CDN fallback)
+     * Fetches the latest `ads/splash.json` and latest release APK link from GitHub
      * and downloads any new or updated ad images into local storage.
      * Must be called on a background thread.
      */
     fun refreshFromGitHub(ctx: Context, localeTag: String): Boolean {
+        // Also refresh the latest GitHub Release APK download link in background
+        refreshLatestReleaseApkUrl(ctx)
+
         val configText = fetchTextWithFallback(AppConfig.SPLASH_CONFIG_PATH) ?: return false
         return try {
             val root = JSONObject(configText)
@@ -110,7 +131,6 @@ object SplashPromo {
                 return true
             }
 
-            // Collect candidate images to pre-cache so all active campaigns are ready offline
             val candidates = extractAllActiveCandidates(root, localeTag)
             val activeKeys = mutableSetOf<String>()
             for (cand in candidates) {
@@ -121,12 +141,45 @@ object SplashPromo {
                 }
             }
 
-            // Clean up obsolete cached images
             cleanOldCacheFiles(ctx, activeKeys)
             true
         } catch (e: Exception) {
             Log.w(TAG, "refreshFromGitHub failed: $e")
             false
+        }
+    }
+
+    private fun refreshLatestReleaseApkUrl(ctx: Context) {
+        var conn: HttpURLConnection? = null
+        try {
+            conn = URL(AppConfig.GITHUB_LATEST_RELEASE_API).openConnection() as HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.setRequestProperty("Accept", "application/vnd.github+json")
+            if (conn.responseCode in 200..299) {
+                val body = conn.inputStream.bufferedReader().readText()
+                val json = JSONObject(body)
+                val assets = json.optJSONArray("assets")
+                if (assets != null) {
+                    for (i in 0 until assets.length()) {
+                        val asset = assets.optJSONObject(i) ?: continue
+                        val name = asset.optString("name", "")
+                        val dlUrl = asset.optString("browser_download_url", "")
+                        if (name.endsWith(".apk", ignoreCase = true) && dlUrl.startsWith("https://")) {
+                            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                                .edit()
+                                .putString(KEY_LATEST_APK_URL, dlUrl)
+                                .apply()
+                            Log.d(TAG, "Resolved latest GitHub Release APK URL: $dlUrl")
+                            return
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "refreshLatestReleaseApkUrl fallback to default: ${e.message}")
+        } finally {
+            conn?.disconnect()
         }
     }
 
@@ -170,7 +223,6 @@ object SplashPromo {
                 chosen
             }
             else -> {
-                // Default "priority": highest priority value wins
                 candidates.maxByOrNull { it.priority }
             }
         }
@@ -213,7 +265,6 @@ object SplashPromo {
             }
         }
 
-        // Fallback to top-level single-ad fields if `campaigns` is omitted or empty
         if (result.isEmpty()) {
             val topImg = resolveLocalizedField(root, "images", "image", localeTag)
             if (topImg.isNotBlank() && isWithinSchedule(root, nowMs)) {

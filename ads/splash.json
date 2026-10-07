@@ -1,16 +1,17 @@
 {
   "enabled": true,
-  "version": "2026.10.07.2",
+  "version": "2026.10.07.3",
   "duration_seconds": 4,
   "show_interval_minutes": 0,
   "strategy": "priority",
+  "apk_download_url": "https://github.com/TestersNightmare/arara/releases/latest/download/arara.apk",
   "image": "ads/images/splash_default.png",
   "link": "/",
   "cta_texts": {
-    "pt-BR": "Explorar Arara Brasil →",
-    "es": "Explorar Arara Brasil →",
-    "en": "Explore Arara Brazil →",
-    "zh": "立即探索 Arara 巴西商城 →"
+    "pt-BR": "Entrar →",
+    "es": "Entrar →",
+    "en": "Enter →",
+    "zh": "进入主页 →"
   },
   "campaigns": [
     {
@@ -18,7 +19,7 @@
       "enabled": true,
       "priority": 100,
       "weight": 10,
-      "version": "2026.10.07.2",
+      "version": "2026.10.07.3",
       "duration_seconds": 4,
       "image": "ads/images/splash_default.png",
       "images": {
@@ -35,10 +36,10 @@
         "zh": "https://ararabr.com/"
       },
       "cta_texts": {
-        "pt-BR": "Ver Coleção Nova →",
-        "es": "Ver Nueva Colección →",
-        "en": "Shop New Collection →",
-        "zh": "查看最新系列 →"
+        "pt-BR": "Entrar →",
+        "es": "Entrar →",
+        "en": "Enter →",
+        "zh": "进入主页 →"
       },
       "open_external": false,
       "start_time": "2026-01-01T00:00:00Z",

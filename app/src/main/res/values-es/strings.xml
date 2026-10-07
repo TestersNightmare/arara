@@ -3,18 +3,10 @@
     <string name="app_name">Arara</string>
     <string name="splash_brand_tagline">ararabr.com • Brasil</string>
     <string name="splash_ad_badge">Publicidad</string>
-    <string name="splash_skip">Saltar %1$ds</string>
-    <string name="splash_cta_default">Ver oferta →</string>
-
-    <string name="lang_button_label">🌐 ES</string>
-    <string name="lang_dialog_title">Seleccionar idioma</string>
-    <string name="lang_opt_pt_br">🇧🇷 Português (Brasil) - Predeterminado</string>
-    <string name="lang_opt_es">🇪🇸 Español</string>
-    <string name="lang_opt_en">🇺🇸 English</string>
-    <string name="lang_opt_zh">🇨🇳 中文 (简体)</string>
-    <string name="lang_opt_home">🏠 Volver al inicio (ararabr.com)</string>
-    <string name="lang_opt_refresh_ad">🔄 Actualizar anuncio de inicio</string>
-    <string name="ad_refreshed_toast">¡Anuncio actualizado desde GitHub!</string>
+    <string name="splash_enter">Entrar →</string>
+    <string name="splash_share">📤 Compartir App</string>
+    <string name="share_apk_chooser_title">Compartir enlace del APK</string>
+    <string name="share_apk_message">Descarga la aplicación oficial Arara (ararabr.com) para Android:\n%1$s</string>
 
     <string name="error_title">Sin conexión a internet</string>
     <string name="error_message">No se pudo cargar ararabr.com. Comprueba tu conexión e inténtalo de nuevo.</string>
