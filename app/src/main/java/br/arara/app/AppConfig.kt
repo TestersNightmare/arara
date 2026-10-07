@@ -1,4 +1,4 @@
-package com.ararabr.app
+package br.arara.app
 
 /**
  * Global configuration for Arara WebView App & GitHub Splash Ad Push Strategy.

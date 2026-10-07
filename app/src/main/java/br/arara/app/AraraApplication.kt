@@ -1,4 +1,4 @@
-package com.ararabr.app
+package br.arara.app
 
 import android.app.Application
 import com.onesignal.OneSignal

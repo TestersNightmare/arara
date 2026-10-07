@@ -4,4 +4,4 @@
 }
 
 # Keep SplashPromo data classes
--keep class com.ararabr.app.** { *; }
+-keep class br.arara.app.** { *; }

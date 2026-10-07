@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.ararabr.app"
+    namespace = "br.arara.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.ararabr.app"
+        applicationId = "br.arara.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 100

@@ -1,4 +1,4 @@
-package com.ararabr.app
+package br.arara.app
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -227,7 +227,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             (btnSplashShare.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
-                lp.topMargin = (topSafe + (14 * density).toInt() - 10).coerceAtLeast(0)
+                val btnHeight = if (btnSplashShare.height > 0) {
+                    btnSplashShare.height
+                } else {
+                    btnSplashShare.measure(
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                    )
+                    btnSplashShare.measuredHeight.takeIf { it > 0 } ?: (36 * density).toInt()
+                }
+                val halfBodyOffset = btnHeight / 2
+                lp.topMargin = (topSafe + (14 * density).toInt() - 10 - halfBodyOffset).coerceAtLeast(0)
                 lp.marginEnd = rightSafe + (16 * density).toInt()
                 btnSplashShare.layoutParams = lp
             }
@@ -471,6 +481,7 @@ class MainActivity : AppCompatActivity() {
         val rawCta = ad.ctaText?.replace("→", "")?.trim()
         btnSplashEnter.text = rawCta?.takeIf { it.isNotBlank() }
             ?: localizedUiContext.getString(R.string.splash_enter)
+        ViewCompat.requestApplyInsets(rootContainer)
 
         // 1. Enter button: click to enter and open the website homepage (or configured promo link)
         val onEnterClick = View.OnClickListener {
