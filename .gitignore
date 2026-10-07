@@ -6,9 +6,11 @@ app/build/
 local.properties
 *.iml
 *.apk
+!release/arara.apk
 *.aab
 *.ap_
 *.dex
+*.idsig
 
 # Keystore files (keep secrets safe)
 keystore.properties

@@ -63,7 +63,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var splashOverlay: View
     private lateinit var splashBrandView: View
     private lateinit var splashAdContainer: View
-    private lateinit var splashBadge: TextView
     private lateinit var btnSplashShare: TextView
     private lateinit var btnSplashEnter: TextView
 
@@ -118,7 +117,6 @@ class MainActivity : AppCompatActivity() {
         splashOverlay = findViewById(R.id.splashOverlay)
         splashBrandView = findViewById(R.id.splashBrandView)
         splashAdContainer = findViewById(R.id.splashAdContainer)
-        splashBadge = findViewById(R.id.splashBadge)
         btnSplashShare = findViewById(R.id.btnSplashShare)
         btnSplashEnter = findViewById(R.id.btnSplashEnter)
 
@@ -225,13 +223,8 @@ class MainActivity : AppCompatActivity() {
                 progressBar.layoutParams = lp
             }
 
-            (splashBadge.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
-                lp.topMargin = topSafe + (16 * density).toInt()
-                lp.marginStart = leftSafe + (16 * density).toInt()
-                splashBadge.layoutParams = lp
-            }
             (btnSplashShare.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
-                lp.topMargin = topSafe + (14 * density).toInt()
+                lp.topMargin = (topSafe + (14 * density).toInt() - 10).coerceAtLeast(0)
                 lp.marginEnd = rightSafe + (16 * density).toInt()
                 btnSplashShare.layoutParams = lp
             }
@@ -402,7 +395,6 @@ class MainActivity : AppCompatActivity() {
             putString("locale", systemLocaleTag)
         })
 
-        splashBadge.text = localizedUiContext.getString(R.string.splash_ad_badge)
         btnSplashShare.text = localizedUiContext.getString(R.string.splash_share)
         val rawCta = ad.ctaText?.replace("→", "")?.trim()
         btnSplashEnter.text = rawCta?.takeIf { it.isNotBlank() }
