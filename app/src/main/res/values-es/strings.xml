@@ -3,7 +3,7 @@
     <string name="app_name">Arara</string>
     <string name="splash_brand_tagline">ararabr.com • Brasil</string>
     <string name="splash_ad_badge">Publicidad</string>
-    <string name="splash_enter">Entrar →</string>
+    <string name="splash_enter">Entrar</string>
     <string name="splash_share">📤 Compartir App</string>
     <string name="share_apk_chooser_title">Compartir enlace del APK</string>
     <string name="share_apk_message">Descarga la aplicación oficial Arara (ararabr.com) para Android:\n%1$s</string>

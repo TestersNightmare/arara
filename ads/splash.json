@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "version": "2026.10.07.3",
+  "version": "2026.10.07.4",
   "duration_seconds": 4,
   "show_interval_minutes": 0,
   "strategy": "priority",
@@ -8,10 +8,10 @@
   "image": "ads/images/splash_default.png",
   "link": "/",
   "cta_texts": {
-    "pt-BR": "Entrar →",
-    "es": "Entrar →",
-    "en": "Enter →",
-    "zh": "进入主页 →"
+    "pt-BR": "Entrar",
+    "es": "Entrar",
+    "en": "Enter",
+    "zh": "进入主页"
   },
   "campaigns": [
     {
@@ -19,7 +19,7 @@
       "enabled": true,
       "priority": 100,
       "weight": 10,
-      "version": "2026.10.07.3",
+      "version": "2026.10.07.4",
       "duration_seconds": 4,
       "image": "ads/images/splash_default.png",
       "images": {
@@ -36,10 +36,10 @@
         "zh": "https://ararabr.com/"
       },
       "cta_texts": {
-        "pt-BR": "Entrar →",
-        "es": "Entrar →",
-        "en": "Enter →",
-        "zh": "进入主页 →"
+        "pt-BR": "Entrar",
+        "es": "Entrar",
+        "en": "Enter",
+        "zh": "进入主页"
       },
       "open_external": false,
       "start_time": "2026-01-01T00:00:00Z",

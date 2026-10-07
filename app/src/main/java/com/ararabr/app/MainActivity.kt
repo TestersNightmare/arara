@@ -404,7 +404,8 @@ class MainActivity : AppCompatActivity() {
 
         splashBadge.text = localizedUiContext.getString(R.string.splash_ad_badge)
         btnSplashShare.text = localizedUiContext.getString(R.string.splash_share)
-        btnSplashEnter.text = ad.ctaText?.takeIf { it.isNotBlank() }
+        val rawCta = ad.ctaText?.replace("→", "")?.trim()
+        btnSplashEnter.text = rawCta?.takeIf { it.isNotBlank() }
             ?: localizedUiContext.getString(R.string.splash_enter)
 
         // 1. Enter button: click to enter and open the website homepage (or configured promo link)

@@ -3,7 +3,7 @@
     <string name="app_name">Arara</string>
     <string name="splash_brand_tagline">ararabr.com • 巴西官方商城</string>
     <string name="splash_ad_badge">廣告</string>
-    <string name="splash_enter">進入主頁 →</string>
+    <string name="splash_enter">進入主頁</string>
     <string name="splash_share">📤 分享應用</string>
     <string name="share_apk_chooser_title">分享最新 APK 下載連結</string>
     <string name="share_apk_message">下載 Arara (ararabr.com) 安卓官方應用最新 APK：\n%1$s</string>

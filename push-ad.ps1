@@ -23,16 +23,16 @@ param(
     [int]$IntervalMinutes = 0,
 
     [Parameter(Mandatory = $false)]
-    [string]$CtaPt = "Ver Oferta →",
+    [string]$CtaPt = "Entrar",
 
     [Parameter(Mandatory = $false)]
-    [string]$CtaEs = "Ver Oferta →",
+    [string]$CtaEs = "Entrar",
 
     [Parameter(Mandatory = $false)]
-    [string]$CtaEn = "Shop Now →",
+    [string]$CtaEn = "Enter",
 
     [Parameter(Mandatory = $false)]
-    [string]$CtaZh = "立即查看 →",
+    [string]$CtaZh = "进入主页",
 
     [Parameter(Mandatory = $false)]
     [switch]$OpenExternal = $false,
