@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="arara_green">#009C3B</color>
+    <color name="arara_yellow">#FFDF00</color>
+    <color name="arara_blue">#002776</color>
+    <color name="arara_dark">#111827</color>
+</resources>

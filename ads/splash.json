@@ -1,0 +1,48 @@
+{
+  "enabled": true,
+  "version": "2026.10.07.1",
+  "duration_seconds": 4,
+  "show_interval_minutes": 0,
+  "strategy": "priority",
+  "image": "ads/images/splash_default.png",
+  "link": "/",
+  "cta_texts": {
+    "pt-BR": "Explorar Arara Brasil →",
+    "es": "Explorar Arara Brasil →",
+    "en": "Explore Arara Brazil →",
+    "zh": "立即探索 Arara 巴西商城 →"
+  },
+  "campaigns": [
+    {
+      "id": "arara_launch_2026",
+      "enabled": true,
+      "priority": 100,
+      "weight": 10,
+      "version": "2026.10.07.1",
+      "duration_seconds": 4,
+      "image": "ads/images/splash_default.png",
+      "images": {
+        "pt-BR": "ads/images/splash_default.png",
+        "es": "ads/images/splash_default.png",
+        "en": "ads/images/splash_default.png",
+        "zh": "ads/images/splash_default.png"
+      },
+      "link": "/",
+      "links": {
+        "pt-BR": "https://ararabr.com/",
+        "es": "https://ararabr.com/",
+        "en": "https://ararabr.com/en",
+        "zh": "https://ararabr.com/"
+      },
+      "cta_texts": {
+        "pt-BR": "Ver Coleção Nova →",
+        "es": "Ver Nueva Colección →",
+        "en": "Shop New Collection →",
+        "zh": "查看最新系列 →"
+      },
+      "open_external": false,
+      "start_time": "2026-01-01T00:00:00Z",
+      "end_time": "2030-12-31T23:59:59Z"
+    }
+  ]
+}

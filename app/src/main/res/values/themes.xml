@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Arara" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/arara_green</item>
+        <item name="colorPrimaryDark">@color/arara_blue</item>
+        <item name="colorAccent">@color/arara_green</item>
+        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

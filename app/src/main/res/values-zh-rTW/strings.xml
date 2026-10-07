@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arara</string>
+    <string name="splash_brand_tagline">ararabr.com • 巴西官方商城</string>
+    <string name="splash_ad_badge">廣告</string>
+    <string name="splash_skip">跳過 %1$ds</string>
+    <string name="splash_cta_default">立即查看 →</string>
+
+    <string name="lang_button_label">🌐 中文</string>
+    <string name="lang_dialog_title">選擇語言 / Idioma</string>
+    <string name="lang_opt_pt_br">🇧🇷 Português (Brasil) - 預設葡語主頁</string>
+    <string name="lang_opt_es">🇪🇸 Español (西班牙語)</string>
+    <string name="lang_opt_en">🇺🇸 English (英語)</string>
+    <string name="lang_opt_zh">🇨🇳 中文</string>
+    <string name="lang_opt_home">🏠 返回葡語巴西主頁 (ararabr.com)</string>
+    <string name="lang_opt_refresh_ad">🔄 立即同步 GitHub 開屏廣告</string>
+    <string name="ad_refreshed_toast">已從 GitHub 同步最新開屏廣告！</string>
+
+    <string name="error_title">網路連線不可用</string>
+    <string name="error_message">無法載入 ararabr.com，請檢查您的網路連線後重試。</string>
+    <string name="error_retry">重新載入</string>
+    <string name="download_started">正在開始下載…</string>
+</resources>

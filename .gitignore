@@ -1,0 +1,20 @@
+# Gradle & Android Studio
+.gradle/
+.idea/
+build/
+app/build/
+local.properties
+*.iml
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Keystore files (keep secrets safe)
+keystore.properties
+*.keystore
+*.jks
+
+# OS temp files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arara</string>
+    <string name="splash_brand_tagline">ararabr.com • Brazil</string>
+    <string name="splash_ad_badge">Ad</string>
+    <string name="splash_skip">Skip %1$ds</string>
+    <string name="splash_cta_default">Shop Now →</string>
+
+    <string name="lang_button_label">🌐 EN</string>
+    <string name="lang_dialog_title">Select Language</string>
+    <string name="lang_opt_pt_br">🇧🇷 Português (Brasil) - Default</string>
+    <string name="lang_opt_es">🇪🇸 Español</string>
+    <string name="lang_opt_en">🇺🇸 English</string>
+    <string name="lang_opt_zh">🇨🇳 中文 (简体)</string>
+    <string name="lang_opt_home">🏠 Back to Home (ararabr.com)</string>
+    <string name="lang_opt_refresh_ad">🔄 Refresh Splash Ad</string>
+    <string name="ad_refreshed_toast">Splash ad synced from GitHub!</string>
+
+    <string name="error_title">No Internet Connection</string>
+    <string name="error_message">Unable to load ararabr.com. Please check your network and try again.</string>
+    <string name="error_retry">Retry</string>
+    <string name="download_started">Starting download…</string>
+</resources>
