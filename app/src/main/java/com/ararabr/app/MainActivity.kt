@@ -73,6 +73,8 @@ class MainActivity : AppCompatActivity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bgExecutor = Executors.newSingleThreadExecutor()
     private var hasEnteredWebsite = false
+    private var isRecoveringUrlFromGitHub = false
+    private var autoRecoveredForCurrentFailure = false
 
     private var pendingPermissionRequest: PermissionRequest? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
@@ -126,7 +128,8 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnRetry).setOnClickListener {
             errorOverlay.visibility = View.GONE
-            loadPtBrUrl(webView.url ?: AppConfig.HOME_URL)
+            autoRecoveredForCurrentFailure = false
+            syncLatestUrlFromGitHubAndLoad()
         }
 
         if (savedInstanceState == null) {
@@ -253,8 +256,12 @@ class MainActivity : AppCompatActivity() {
         return createConfigurationContext(config)
     }
 
+    private fun currentDefaultHomeUrl(): String {
+        return SplashPromo.resolveDefaultHomeUrl(this, systemLocaleTag)
+    }
+
     /**
-     * Ensures Shopify (`ararabr.com` / `shopee2028.myshopify.com`) locks to Brazil (`BR`)
+     * Ensures Shopify (`ararabr.com` / `shopee2028.myshopify.com` / configured `default_url`) locks to Brazil (`BR`)
      * and Brazilian Portuguese (`pt-BR`), clearing any stale `/en` session cookies from prior runs.
      */
     private fun prepareShopifyPtBrSession() {
@@ -267,7 +274,11 @@ class MainActivity : AppCompatActivity() {
             prefs.edit().putBoolean(KEY_PT_COOKIE_INIT_V2, true).apply()
         }
 
-        val domains = listOf("https://ararabr.com", "https://shopee2028.myshopify.com")
+        val domains = linkedSetOf(
+            "https://ararabr.com",
+            "https://shopee2028.myshopify.com",
+            currentDefaultHomeUrl()
+        )
         for (domain in domains) {
             cm.setCookie(domain, "localization=BR; path=/; Secure; SameSite=Lax")
             cm.setCookie(domain, "cart_currency=BRL; path=/; Secure; SameSite=Lax")
@@ -276,14 +287,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Rewrites any Shopify `/en` path on `ararabr.com` or `shopee2028.myshopify.com`
+     * Rewrites any Shopify `/en` path on `ararabr.com`, `shopee2028.myshopify.com`, or configured `default_url`
      * to the Portuguese root path (`/`) and loads with `Accept-Language: pt-BR,pt;q=0.9`.
      */
     private fun rewriteShopifyUrlToPtBr(rawUrl: String): String {
         return try {
             val uri = Uri.parse(rawUrl)
             val host = uri.host?.lowercase(Locale.ROOT) ?: return rawUrl
-            if (host == "ararabr.com" || host.endsWith(".ararabr.com") || host == "shopee2028.myshopify.com") {
+            val configuredHost = Uri.parse(currentDefaultHomeUrl()).host?.lowercase(Locale.ROOT)
+            val isTargetHost = host == "ararabr.com" ||
+                host.endsWith(".ararabr.com") ||
+                host == "shopee2028.myshopify.com" ||
+                (configuredHost != null && (host == configuredHost || host.endsWith(".$configuredHost")))
+            if (isTargetHost) {
                 val path = uri.path ?: "/"
                 if (path == "/en" || path.startsWith("/en/")) {
                     val newPath = path.removePrefix("/en").ifEmpty { "/" }
@@ -299,6 +315,62 @@ class MainActivity : AppCompatActivity() {
     private fun loadPtBrUrl(url: String) {
         val targetUrl = rewriteShopifyUrlToPtBr(url)
         webView.loadUrl(targetUrl, mapOf("Accept-Language" to PT_BR_ACCEPT_LANGUAGE))
+    }
+
+    /**
+     * Pulls the latest `ads/splash.json` link configuration from GitHub and loads the latest URL.
+     */
+    private fun syncLatestUrlFromGitHubAndLoad() {
+        progressBar.visibility = View.VISIBLE
+        progressBar.progress = 20
+        bgExecutor.execute {
+            SplashPromo.refreshFromGitHub(applicationContext, systemLocaleTag)
+            val latestUrl = SplashPromo.resolveTargetUrlFromConfig(applicationContext, systemLocaleTag)
+            mainHandler.post {
+                prepareShopifyPtBrSession()
+                errorOverlay.visibility = View.GONE
+                loadPtBrUrl(latestUrl)
+            }
+        }
+    }
+
+    /**
+     * Triggered when WebView fails to open the main-frame page:
+     * Automatically pulls the latest `default_url` / `link` parameters from the GitHub repository
+     * (`ads/splash.json`) and reloads with the updated URL.
+     */
+    private fun handleMainFrameLoadError(failedUrl: String) {
+        if (!autoRecoveredForCurrentFailure && !isRecoveringUrlFromGitHub) {
+            isRecoveringUrlFromGitHub = true
+            autoRecoveredForCurrentFailure = true
+            progressBar.visibility = View.VISIBLE
+            progressBar.progress = 30
+
+            firebaseAnalytics.logEvent("page_load_error_auto_sync", Bundle().apply {
+                putString("failed_url", failedUrl)
+            })
+
+            bgExecutor.execute {
+                val synced = SplashPromo.refreshFromGitHub(applicationContext, systemLocaleTag)
+                val latestUrl = SplashPromo.resolveTargetUrlFromConfig(applicationContext, systemLocaleTag)
+                mainHandler.post {
+                    isRecoveringUrlFromGitHub = false
+                    prepareShopifyPtBrSession()
+                    if (synced) {
+                        errorOverlay.visibility = View.GONE
+                        loadPtBrUrl(latestUrl)
+                    } else {
+                        swipeRefresh.isRefreshing = false
+                        progressBar.visibility = View.GONE
+                        errorOverlay.visibility = View.VISIBLE
+                    }
+                }
+            }
+        } else if (!isRecoveringUrlFromGitHub) {
+            swipeRefresh.isRefreshing = false
+            progressBar.visibility = View.GONE
+            errorOverlay.visibility = View.VISIBLE
+        }
     }
 
     /**
@@ -328,7 +400,7 @@ class MainActivity : AppCompatActivity() {
                 if (fallbackAd != null) {
                     renderSplashAd(fallbackAd)
                 } else {
-                    enterWebsite(AppConfig.HOME_URL, openExternal = false)
+                    enterWebsite(currentDefaultHomeUrl(), openExternal = false)
                 }
             }
         }
@@ -352,7 +424,7 @@ class MainActivity : AppCompatActivity() {
                         if (fallbackAd != null) {
                             renderSplashAd(fallbackAd)
                         } else {
-                            enterWebsite(AppConfig.HOME_URL, openExternal = false)
+                            enterWebsite(currentDefaultHomeUrl(), openExternal = false)
                         }
                     }
                 }
@@ -442,25 +514,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Dismisses the splash page and opens the website homepage (`https://ararabr.com`) in WebView.
+     * Dismisses the splash page and opens the configured default homepage (`default_url` in `ads/splash.json`) in WebView.
      */
     private fun enterWebsite(link: String, openExternal: Boolean) {
         splashOverlay.visibility = View.GONE
+        val homeUrl = currentDefaultHomeUrl()
         val trimmed = link.trim()
         val targetUrl = if (trimmed.isEmpty() || trimmed == "/") {
-            AppConfig.HOME_URL
+            homeUrl
         } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             trimmed
         } else {
-            "${AppConfig.HOME_URL.trimEnd('/')}/${trimmed.trimStart('/')}"
+            "${homeUrl.trimEnd('/')}/${trimmed.trimStart('/')}"
         }
 
         if (!hasEnteredWebsite) {
             hasEnteredWebsite = true
-            loadPtBrUrl( if (openExternal) AppConfig.HOME_URL else targetUrl )
+            prepareShopifyPtBrSession()
+            loadPtBrUrl(if (openExternal) homeUrl else targetUrl)
         }
 
-        if (openExternal && targetUrl != AppConfig.HOME_URL) {
+        if (openExternal && targetUrl != homeUrl) {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)))
             } catch (_: Exception) {
@@ -521,7 +595,12 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                swipeRefresh.isRefreshing = false
+                if (!isRecoveringUrlFromGitHub) {
+                    swipeRefresh.isRefreshing = false
+                }
+                if (errorOverlay.visibility == View.GONE && !url.startsWith("about:")) {
+                    autoRecoveredForCurrentFailure = false
+                }
                 val ptUrl = rewriteShopifyUrlToPtBr(url)
                 if (ptUrl != url) {
                     loadPtBrUrl(ptUrl)
@@ -535,8 +614,18 @@ class MainActivity : AppCompatActivity() {
             ) {
                 super.onReceivedError(view, request, error)
                 if (request.isForMainFrame) {
-                    swipeRefresh.isRefreshing = false
-                    errorOverlay.visibility = View.VISIBLE
+                    handleMainFrameLoadError(request.url?.toString() ?: currentDefaultHomeUrl())
+                }
+            }
+
+            override fun onReceivedHttpError(
+                view: WebView,
+                request: WebResourceRequest,
+                errorResponse: android.webkit.WebResourceResponse
+            ) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                if (request.isForMainFrame && errorResponse.statusCode >= 500) {
+                    handleMainFrameLoadError(request.url?.toString() ?: currentDefaultHomeUrl())
                 }
             }
         }
@@ -602,8 +691,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         swipeRefresh.setOnRefreshListener {
-            errorOverlay.visibility = View.GONE
-            webView.reload()
+            if (errorOverlay.visibility == View.VISIBLE) {
+                errorOverlay.visibility = View.GONE
+                autoRecoveredForCurrentFailure = false
+                syncLatestUrlFromGitHubAndLoad()
+            } else {
+                webView.reload()
+            }
         }
     }
 

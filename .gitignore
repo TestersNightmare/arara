@@ -20,3 +20,4 @@ keystore.properties
 # OS temp files
 .DS_Store
 Thumbs.db
+google-services.json

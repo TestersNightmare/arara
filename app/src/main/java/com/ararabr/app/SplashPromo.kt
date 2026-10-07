@@ -65,6 +65,52 @@ object SplashPromo {
     }
 
     /**
+     * Resolves the default website homepage URL from the cached `ads/splash.json` (`default_url`),
+     * falling back to `AppConfig.HOME_URL` (`https://ararabr.com`).
+     */
+    fun resolveDefaultHomeUrl(ctx: Context, localeTag: String = "pt-BR"): String {
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val rawJson = prefs.getString(KEY_RAW_JSON, null)
+        if (!rawJson.isNullOrBlank()) {
+            try {
+                val root = JSONObject(rawJson)
+                val configured = resolveLocalizedField(root, "default_urls", "default_url", localeTag)
+                    .ifBlank { root.optString("home_url", "") }
+                    .trim()
+                if (configured.startsWith("http://") || configured.startsWith("https://")) {
+                    return configured
+                }
+            } catch (_: Exception) {
+            }
+        }
+        return AppConfig.HOME_URL
+    }
+
+    /**
+     * Resolves the full target URL (combining `default_url` and active campaign `link`)
+     * from the cached `ads/splash.json` configuration.
+     */
+    fun resolveTargetUrlFromConfig(ctx: Context, localeTag: String = "pt-BR"): String {
+        val homeUrl = resolveDefaultHomeUrl(ctx, localeTag)
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val rawJson = prefs.getString(KEY_RAW_JSON, null) ?: return homeUrl
+        return try {
+            val root = JSONObject(rawJson)
+            val selected = selectCampaign(ctx, root, localeTag)
+            val rawLink = selected?.link?.trim() ?: root.optString("link", "/").trim()
+            if (rawLink.isEmpty() || rawLink == "/") {
+                homeUrl
+            } else if (rawLink.startsWith("http://") || rawLink.startsWith("https://")) {
+                rawLink
+            } else {
+                "${homeUrl.trimEnd('/')}/${rawLink.trimStart('/')}"
+            }
+        } catch (_: Exception) {
+            homeUrl
+        }
+    }
+
+    /**
      * Resolves an active ad campaign from cached configuration & local image cache for the given locale.
      */
     fun resolveCachedAd(ctx: Context, localeTag: String, ignoreInterval: Boolean = false): AdDisplayItem? {
@@ -413,7 +459,7 @@ object SplashPromo {
             return listOf(trimmed)
         }
         val cleanPath = trimmed.trimStart('/')
-        val suffix = if (bustCache) "?t=${System.currentTimeMillis() / 60000}" else ""
+        val suffix = if (bustCache) "?t=${System.currentTimeMillis()}" else ""
         return AppConfig.GITHUB_ASSET_BASES.map { base ->
             "${base.trimEnd('/')}/$cleanPath$suffix"
         }

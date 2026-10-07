@@ -78,4 +78,7 @@ dependencies {
     // Google Analytics (Firebase Analytics SDK - reads app/google-services.json)
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-analytics")
+
+    // OneSignal Push Notification SDK (App ID: 7d5dd27c-9a76-42e6-9938-e44f876b5d07)
+    implementation("com.onesignal:OneSignal:[5.1.6, 5.1.99]")
 }

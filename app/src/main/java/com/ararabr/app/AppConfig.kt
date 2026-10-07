@@ -40,4 +40,9 @@ object AppConfig {
      * Maximum wait time (in ms) on first cold start when local cache is empty.
      */
     const val FIRST_LAUNCH_FETCH_TIMEOUT_MS = 2500L
+
+    /**
+     * OneSignal App ID for push notifications.
+     */
+    const val ONESIGNAL_APP_ID = "7d5dd27c-9a76-42e6-9938-e44f876b5d07"
 }

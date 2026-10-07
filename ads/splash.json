@@ -1,9 +1,10 @@
 {
   "enabled": true,
-  "version": "2026.10.07.4",
+  "version": "2026.10.07.5",
   "duration_seconds": 4,
   "show_interval_minutes": 0,
   "strategy": "priority",
+  "default_url": "https://ararabr.com",
   "apk_download_url": "https://github.com/TestersNightmare/arara/releases/latest/download/arara.apk",
   "image": "ads/images/splash_default.png",
   "link": "/",
@@ -19,7 +20,7 @@
       "enabled": true,
       "priority": 100,
       "weight": 10,
-      "version": "2026.10.07.4",
+      "version": "2026.10.07.5",
       "duration_seconds": 4,
       "image": "ads/images/splash_default.png",
       "images": {
@@ -30,10 +31,10 @@
       },
       "link": "/",
       "links": {
-        "pt-BR": "https://ararabr.com/",
-        "es": "https://ararabr.com/",
-        "en": "https://ararabr.com/",
-        "zh": "https://ararabr.com/"
+        "pt-BR": "/",
+        "es": "/",
+        "en": "/",
+        "zh": "/"
       },
       "cta_texts": {
         "pt-BR": "Entrar",
